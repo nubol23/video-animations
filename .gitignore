@@ -1,0 +1,14 @@
+/linear_regression/.idea
+/linear_regression/videos
+/linear_regression/video_assets
+/linear_regression/__pycache__
+/linear_regression/media
+
+/learning/.idea
+/learning/videos
+/learning/video_assets
+/learning/__pycache__
+/learning/media
+
+/linear_regression/*.mp4
+/linear_regression/*.osp
