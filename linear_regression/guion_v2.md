@@ -8,34 +8,21 @@
 * Ecuación Normal: Derivando la ecuación, convexidad del error cuadrático, mostrando el resultado del ajuste y los parámetros
 * Múltiples regresiones lineales: Extender la idea al plano
 
-**Reserva si no se alcanzan los 10 minutos**
-
-* Normalización de los datos
-* Interpretación de la regresión: Qué significan los parámetros
-* Motivación para el iterativo: En la vida real se pueden tener datos masivos, producto vector matriz es factible
-* Descenso del gradiente: Ejemplo resolviendo una ecuación no lineal, Definición para Reg Lineal
-* Ajuste: Visualizando parámetros conforme ajustax
-
-Para el sgte vid: Ajuste polinomial, prueba de hipótesis..., Lasso, Ridge, Otros métodos iterativos
-
 ### Introducción:
 
-> Cambiar dataset por P 35 tabla 2.1 una muestra aleatoria
+Seguro que alguna vez viste un gráfico de puntos similar a este.
 
-Cuando se tienen datos de la siguiente forma,
-a veces es necesario predecir valores fuera del rango conocido
+Supongamos que en el eje $x$ se indica el ingreso semanal de una persona, y en el $y$, el gasto de consumo en esa cantidad de tiempo.
 
-Por ejemplo, si decimos que $x$ representa el ingreso semanal de una persona
+En otras palabras cada punto representa una persona y nos dice cuánto gasta en base a su ganancia.
 
-y $y$ el gasto de consumo semanal
+Digamos que quieres saber cuánto consume aproximadamente alguien que gane 280, ¿cómo podemos conocer ese valor?
 
-Sería útil poder conocer el gasto semanal de la persona dado su ingreso
+Pues este tipo de problemas de predicción se lo plantearon Gauss y Legendre `Escribir los nombres` mientras trataban de determinar las órbitas de cuerpos celestes en base a observaciones pasadas.
 
-pero cómo podemos estimar el mejor valor en base a la información disponible?
+Descubrieron que podían aproximarlas con buena precisión al encontrar la recta que se ajuste mejor a los puntos, y a este modelo se le llamó **Regresión Lineal**
 
-La idea consiste en encontrar la línea de mejor ajuste a los puntos,
-
-y cómo lo conseguimos habiendo tantas rectas posibles?
+La pregunta ahora es, ¿cómo encontrar esta recta de entre todas las posibles?
 
 ### Rectas 1
 Recordemos que una recta está definida por su pendiente $m$ e intercepto $b$
@@ -197,10 +184,6 @@ Como cada predicción es una estimación del valor esperado de y dado x, cuando 
 
 > Notar que correlación no implica causalidad, además que en el análisis de correlación no se hace distinción de las variables, ambas se asumen como aleatorias, mientras que en regresión se asume que sólo la dependiente es aleatoria y las explicativas son fijas, no estocásticas.  
 
-### Ejemplo (TODO)
-
-**DESARROLLAR EL EJEMPLO DE LA PAG 80**
-
 ### Regresión Lineal Múltiple
 
 Volviendo al modelo, consideremos ahora una variable explicativa más. La cantidad de años de estudio, de manera general, mientras más especializada la persona, mejor sueldo podría tener.
@@ -218,52 +201,3 @@ De manera similar al caso con una variable, se puede re escribir como matrices, 
 Si se considera la muestra del conjunto de puntos, se tiene el plano ajustado:
 
 > Estandarización se deja para el método iterativo
-
-### Normalización de datos
-
-Como las variables en la vida real tienen distintas escalas, esto puede hacer dificil de interpretar los parámetros, para evitar esto, y simplificar la función de error se estandarizan los datos.
-
-Vamos a denotar la segunda colúmna de la matriz X como $X_{:, 2}$
-
-Para la segunda colúmna de $X$ se calcula la media y su desviación estándar, 
-
-y se realiza el cálculo elemento a elemento en la colúmna, que se guarda en la segunda colúmna de la matriz estandarizada X tilde. Esta matriz también tiene unos en su primera colúmna.
-
-Se realiza el mismo procedimiento para $\mathbf{y}$
-
-`Graficar puntos en escala real y llevarlos a la normal` aplicandolo, observamos como se desplazan los puntos al centro
-
-`Zoom al grafico`
-
-`Graficar Superficie de error` la superficie de error es el siguiente paraboloide:
-
-El punto $(\beta_1, \beta_2, E(\beta))$ está lo más cerca posible al mínimo de la superficie de error como se puede observar `Graficar el punto mínimo`.
-
-Con los valores de los betas y el error calculados `Evaluar el punto mínimo`
-
-Tenemos la línea de mejor ajuste en los datos estandarizados
-
-Nótese que al estandarizar, el intercepto se vuelve cero.
-
-**Cómo obtener los parámetros no estandarizados desde los estandarizados**
-
-> How do we interpret the beta coefficients? The interpretation is that if the (standardized)
-> regressor increases by one standard deviation, on average, the (standardized) regressand
-> increases by $\beta^*_2$ standard deviation units. Thus, unlike the traditional model in Eq. (6.3.3), we
-> measure the effect not in terms of the original units in which Y and X are expressed, but in
-> standard deviation units.
-
-### Motivación
-
-[Revisar](https://stats.stackexchange.com/questions/278755/why-use-gradient-descent-for-linear-regression-when-a-closed-form-math-solution)
-
-En la vida real, la matriz $X$ puede llegar a ser gigante con una gran cantidad de datos.
-
-Veamos una vez más la fórmula de la ecuación normal $\beta = (\mathbf{X}^T\cdot\mathbf{X})^{-1}\cdot\mathbf{X}^T\cdot\mathbf{y}$, notemos que tenemos que multiplicar $X^TX$ si suponemos que $X$ tiene dimensiones $m\times n$, una estimación de la cantidad de operaciones para calcularlo es $O(m^2n)$ [notación O indica el peor caso](https://www.freecodecamp.org/news/big-o-notation-simply-explained-with-illustrations-and-video-87d5a71c0174/) 
-
-Una computadora moderna puede realizar unas $10^8$ operaciones por segundo en un lenguaje veloz como **c++** y **Fortran** que es en lo que están escritas las librerías de algebra lineal computacional
-
-Si tuvieramos una matriz de $300000\times 1000$, realizar la operación tomaría unas $10^{13}$ operaciones
-
-Es plausible esperar unos segundos para esto, sin embargo con $300000\times 10000$ un caso que se puede dar en información geoespacial, ya no cabe en la memoria de una computadora común, es por estas limitaciones de tiempo y memoria que se plantea encontrar los parámetros de manera iterativa.
-
