@@ -20,184 +20,192 @@ Digamos que quieres saber cuánto consume aproximadamente alguien que gane 280, 
 
 Pues este tipo de problemas de predicción se lo plantearon Gauss y Legendre `Escribir los nombres` mientras trataban de determinar las órbitas de cuerpos celestes en base a observaciones pasadas.
 
-Descubrieron que podían aproximarlas con buena precisión al encontrar la recta que se ajuste mejor a los puntos, y a este modelo se le llamó **Regresión Lineal**
+Descubrieron que podían aproximarlas con buena precisión al encontrar una curva que se ajuste mejor a los puntos, al caso donde la curva es una recta se le llamó **Regresión Lineal**
 
 La pregunta ahora es, ¿cómo encontrar esta recta de entre todas las posibles?
 
 ### Rectas 1
-Recordemos que una recta está definida por su pendiente $m$ e intercepto $b$
+Empecemos por comprender la ecuación de una recta, la cual está definida por su pendiente $m$ e intercepto $b$.
 `ecuación de la recta`
-donde la pendiente indica la inclinación de la recta como la proporción del cambio vertical con respecto al horizontal,  y el intercepto en qué punto toca el eje $y$
+Si trazamos una línea, la pendiente nos dice su inclinación, esta se calcula como la proporción del cambio vertical, respecto al horizontal, que en este ejemplo es $\frac{1}{2}$, mientras que el intercepto, representa en qué punto toca el eje $y$
 
 En la literatura estadística se les llama $\beta_1$ al intercepto y $\beta_2$ a la pendiente.
 
-variando estos dos valores podemos construir infinitas rectas.
+Es variando estos dos parámetros, que podemos construir cualquier recta en el espacio.
 `Mostrando rectas con parámetros aleatorios`
 
 ### Rectas 2
 
-Ya conocemos la entrada y respuesta de algunos puntos
+Ya conocemos las coordenadas de algunos puntos, modelamos esta información con una función que recibe el i-esimo valor en $x$ y devuelve su correspondiente en $y$
 
-modelamos esta información asumiento que tienen una relación lineal y pueden ser explicados por una recta `line_eq1`, a esto se le agrega un término de error `lineas azules`, el cual representa variables no consideradas o ruido `line_eq2` en nuestro ejemplo el gasto mensual no solamente depende del ingreso, existen variables del diario vivir que no se están considerando. A esto se le suma el hecho que las observaciones pueden ser sólo una muestra del total de datos.
+Esta función se define asumiendo que tienen una relación lineal y pueden ser explicados por una recta `line_eq1` , a esto se le agrega un término de error `lineas azules`, el cual representa variables no consideradas o ruido `line_eq2`.
 
-Ahora queremos predecir el consumo para valores desconocidos pero que provienen de la misma distribución de datos.
+Por ejemplo el gasto mensual no solamente depende del ingreso, existen variables en el día a día de una persona que no se están considerando.
 
-Para estas observaciones nuevas no podemos calcular el término de error, por lo que lo omitimos, lo cual hará que nuestra estimación no sea perfecta, pero si lo más cercana al valor real posible
+Para observaciones nuevas no podemos calcular el término de error, por lo que lo omitimos, lo cual hará que nuestra aproximación no sea perfecta, pero si lo más cercana al valor real 
 
-A esta estimación la llamaremos $\hat{y} $, y debido a que asumimos que nuestros puntos eran una muestra, renombraremos los parámetros con el sombrero para indicar que son una estimación de los parámetros de la población real.
+A esta estimación la llamaremos $\hat{y} $, además asumiremos que nuestros puntos son una muestra, por lo que reescribimos los parámetros con el sombrero para indicar que son una estimación y se les llama estimadores.
 
-Podemos definir una forma de medir, dados $\beta_1$ y $\beta_2$ cuán distinta es la estimación del valor $\hat{y}$ al valor original $y_i$ para los puntos $(x_i, y_i)$ conocidos.
+Necesitamos una forma de medir, cuán distinta es la predicción del valor $\hat{y}$ al original para los puntos conocidos.
 
-Promediando estos valores para todos los puntos obtenemos una medida de error total.
+Esto se hace restando los valores, <u>para darle más peso a las diferencias grandes e igualdad de importancia a los errores positivos y negativos</u>, se eleva al cuadrado.
 
-Esta medida de error se llama error cuadrático medio: $\displaystyle E(\beta)=\frac{1}{m}\sum_{i=1}^m (\hat{y}_i-y_i)^2$, y es una de las funciones de error más utilizadas.
+Promediando estos valores obtenemos una medida de error, llamada error cuadrático medio: $\displaystyle J(\beta)=\frac{1}{m}\sum_{i=1}^m (\hat{y}_i-y_i)^2$, y es una de las funciones de costo más utilizadas.
 
-Ahora sabemos que una línea ajusta mejor mientras menor el valor de $E(\beta)$
+Una línea se ajusta mejor a los puntos mientras más pequeño el valor de J, por lo que necesitamos una manera automática de dado un conjunto de datos $X$ y $Y$, obtener los valores de los $\beta$ que produzcan el menor error.
 
-por lo que necesitamos una manera automática de dado un conjunto de datos $X$ y $Y$, obtener los valores de $\beta$ que produzcan el menor valor posible de $J(\beta)$
+Esta operación se llama argumento del mínimo.
+
+### Disclaimer
+
+A partir de aquí, se detalla cómo obtener la fórmula para calcular el vector de parámetros $\hat{\beta}$ mediante mínimos cuadrados.
+
+Si ya la conoces, o sólo te interesa comprender gráficamente qué hace la regresión, avanza al minuto: ...
 
 ### Ecuación Normal 1 (Notación)
 
 --------------------------------------------------------------------------------
 
-Notemos que todo sistema de ecuaciones
+Para resolver esto debemos notar primero que todo sistema de ecuaciones lineales
 
-$$\begin{cases}a_{11}x_1+a_{12}x_2+\dots+a_{1n}x_n=b_1\\ a_{21}x_1+a_{22}x_2+\dots+a_{2n}x_n=b_2\\\vdots\\a_{n1}x_1+a_{n2}x_2+\dots+a_{nn}x_n=b_n\end{cases}$$
+se puede expresar en función de matrices.
 
-se puede reescribir en función de matrices.
+Como tenemos $m$ puntos en nuestro conjunto de datos
 
-$$\begin{bmatrix}a_{11}, a_{12}, \dots, a_{1n}\\a_{21}, a_{22}, \dots, a_{2n}\\\vdots\\a_{n1}, a_{n2}, \dots, a_{nn}\end{bmatrix}\begin{bmatrix}x_1\\x_2\\\vdots\\x_n\end{bmatrix}=\begin{bmatrix}b_1\\b_2\\\vdots\\b_n\end{bmatrix}$$
-
-$$A\mathbf{x}=\mathbf{b}$$
-
---------------------------------------------------------------------------------
-
-Así para simplificar los cálculos es conveniente expresarlo de esta manera.
-
-Como tenemos $m$ puntos tambien llamados observaciones en nuestro conjunto de datos
-
-Podemos reordenar la respuestas conocidos como un vector de resultados $\mathbf{\hat{y}}$ donde cada elemento o "fila" corresponde a una observación.
+Podemos acomodar las estimaciones de las respuestas en un vector donde cada elemento corresponde a una observación.
 
 $$\begin{bmatrix}\hat{y}_1\\\hat{y}_2\\\vdots\\\hat{y}_m\end{bmatrix}=\begin{bmatrix}\beta_1+\beta_2x_1\\\beta_1+\beta_2x_2\\\vdots\\\beta_1+\beta_2x_m\end{bmatrix}$$
 
-Ahora podemos reescribir la suma de esta manera $\beta_1\cdot1 + \beta_2\cdot x$ escribiendo de manera explícita el uno por $\beta_1$
+Ahora podemos reescribir la operación anotando el uno acompañando al primer parámetro de manera explícita.
 
-`Mover a la izquierda y empezar a escribir a la derecha` recordando la definición del producto punto entre dos vectores.
+`Mover a la izquierda y empezar a escribir a la derecha` 
 
-Si tenemos $\mathbf{x}_i = \begin{bmatrix}1\\ x_i\end{bmatrix}$ y $\beta = \begin{bmatrix}\beta_1\\ \beta_2\end{bmatrix}$, su producto punto es $\langle \mathbf{x}_i, \beta\rangle = 1\cdot \beta_1 + x_i\cdot\beta_2$.
+Recordando la definición del producto punto entre dos vectores.
 
-`De nuevo a la izquierda` entonces cada elemento del vector es el producto punto entre los vectores 
+Si tenemos un vector $\mathbf{x}_i = \begin{bmatrix}1\\ x_i\end{bmatrix}$ y otro $\beta = \begin{bmatrix}\beta_1\\ \beta_2\end{bmatrix}$ conteniendo los estimadores, su producto punto se defiune como  la siguiente expresión $\langle \mathbf{x}_i, \beta\rangle = 1\cdot \beta_1 + x_i\cdot\beta_2$.
 
-$$\begin{bmatrix}\hat{y}_1\\\hat{y}_2\\\vdots\\\hat{y}_m\end{bmatrix} =\begin{bmatrix}\langle\begin{bmatrix}1\\x_1\end{bmatrix},\begin{bmatrix}\beta_1\\\beta_2\end{bmatrix}\rangle\\ \langle\begin{bmatrix}1\\x_2\end{bmatrix},\begin{bmatrix}\beta_1\\\beta_2\end{bmatrix}\rangle\\ \vdots  \\ \langle\begin{bmatrix}1\\x_m\end{bmatrix},\begin{bmatrix}\beta_1\\\beta_2\end{bmatrix}\rangle\end{bmatrix}$$
+`De nuevo a la izquierda`
 
-`A la derecha` Pero podemos reescribir el producto punto como el vector $\mathbf{x}_i$ traspuesto volviendose un vector fila, por el vector $\beta$ así. $\mathbf{x}_i^T\beta = \begin{bmatrix}1, x_i\end{bmatrix}\begin{bmatrix}\beta_1\\ \beta_2\end{bmatrix}$ 
+Así cada elemento del vector es un producto de vectores 
 
-Esta notación se basa en considerarlos directamente como matrices de $v^T: 1\times2$ y $u: 2\times 1$ respectivamente.
+`A la derecha` Podemos reescribirlo como $\mathbf{x}_i$ traspuesto volviendose un vector fila, por $\beta$.
 
-`Izquierda` Reescribiendo así el vector $\mathbf{\hat{y}}$:
+`Izquierda` aplicamos esto al vector
 
-$$\begin{bmatrix}\hat{y}_1\\\hat{y}_2\\\vdots\\\hat{y}_m\end{bmatrix}= \begin{bmatrix}\mathbf{x}_1^T\beta\\ \mathbf{x}_2^T\beta\\ \vdots  \\ \mathbf{x}_m^T\beta\end{bmatrix}$$
+y vemos que hasta este punto ya simplificamos mucho la notación, pero nota que $\beta$ se repite muchas veces, entonces consideremos cada vector $\mathbf{x}_i^T$ como fila de una matriz.
 
-Hasta este punto ya simplificamos mucho la notación, pero notemos que $\beta$ se repite muchas veces, podemos simplificarla más considerando cada vector $\mathbf{x}_i^T$ como fila de una matriz.
-
-`Borrar la derecha` De modo que tenemos la matriz $X = \begin{bmatrix}1, x_1\\ 1, x_2\\\vdots\\1, x_m\end{bmatrix}$ llamada matriz de diseño. Al multiplicarla por el vector $\beta$ obtenemos `multiplicación larga` que se escribe matricialmente como $\mathbf{\hat{y}} = \mathbf{X}\beta$.
-
-Esta notación es muy util para simplificar los cálculos y escribir programas que lo resuelvan.
+`Borrar la derecha` De modo que tenemos X mayúscula, esta estructura se llama llamada matriz de diseño. Al multiplicarla por el vector $\beta$ `multiplicación larga` se tiene una ecuación en forma matricial $\mathbf{\hat{y}} = \mathbf{X}\beta$.
 
 ### Mínimos Cuadrados
 
-Existen casos donde el sistema no tiene solución, sin embargo existirá un vector $\mathbf{x}^*$ que al multiplicarse por $A$ da como resultado un vector $b^*$ lo más cercano posible a $b$.
+Como todo se reduce a resolver un sistema de ecuaciones lineales, es muy importante mencionar que hay casos para los que no existe solución, pero, se puede hallar un vector $\mathbf{x}^*$ que al evaluar en el sistema, da un resultado lo más cerca posible al original.
 
-Al vector $\mathbf{x}^*$ se le llama solución por mínimos cuadrados.
+A $\mathbf{x}^*$ se le llama solución por mínimos cuadrados.
 
-Esta formulación es equivalente a encontrar el $\mathbf{x}^*$ que minimice ($\underset{\mathbf{x}}{\operatorname{argmin}} ||A\mathbf{x}-b||^2$)
+Y esta formulación es equivalente a encontrar el vector que minimice la distancia al cuadrado de $b$ y $b^*$ ($\underset{\mathbf{x}}{\operatorname{argmin}} ||A\mathbf{x}-b||^2$)
 
-**Es decir la distancia entre $b^*$ y $b$**
-
-La regresión lineal es uno de estos sistemas, por lo que se debe resolver, entre comillas, ya que sabemos que no encontraremos una solución exacta, mediante mínimos cuadrados
+La regresión lineal es uno de estos sistemas, por lo que la solución no será exacta.
 
 ### Ecuación Normal 2
 
-Se puede reescribir el error cuadrático medio como `ms1 a mse2` de manera matricial, para enccontrar el mínimo de esta función podemos prescindir el término $\frac{1}{m}$ simplificandose a: `mse3`
+Se puede expresar el error cuadrático medio de forma matricial, además, para enccontrar el mínimo de esta función podemos prescindir del término $\frac{1}{m}$: `mse3`
 
 --------------------------------------
 
-Recordemos que $\mathbf{\hat{y}} = X\beta$
+Recordemos que $\mathbf{\hat{y}} = X\hat{\beta}$
 
-**Esta formulación es una reescritura de la norma descrita en mínimos cuadrados (Escribir la ecuación de mínimos cuadrados con $\beta$** 
+**Y de esta manera se ve que el error cuadrático medio es en realidad la función objetivo de mínimos cuadrados (Escribir la ecuación de mínimos cuadrados con $\beta$** 
 
 ------------------------------------------------------
 
-`Mover arriba y empezar el desarrollo` Desarrollando esta expresión tenemos.
+Para desarrollar esta expresión
 
-La función del error cuadrático medio forma una superficie convexa, es decir que tiene un único punto mínimo. `Graficar el MSE`
-Se deriva la expresión con respecto a $\beta$
+Primero se aplican propiedades de la traspuesta
+
+Se distribuyen el primer ... y segundo término
+
+Y notemos que los valores marcados dan como resultado un número, por lo que se pueden restar
+
+`Grafica`
+
+Veamos que la función de error forma una superficie donde los ejes x y y representan los valores de los parámetros, y z el error, esta superficie es convexa, es decir que tiene un único punto mínimo.
+
+Para encontrarlo, se deriva la expresión con respecto a $\beta$
 
 Y se la iguala a 0, técnica común para encontrar mínimos.
 
-`Desarrollar`
-Obtenemos la siguiente expresión, que nos da una fórmula exacta para los β que producen el menor error.
+Despejando el vector beta
 
-Es decir el punto más cercano al mínimo. `Punto amarillo`
+Obtenemos la ecuación normal, este es el vector que evaluado en el sistema produce un resultado lo más cercano posible al esperado.  
+
+Y desde la perspectiva de minimización, es el punto de menor error posible.
 
 ### Ecuación Normal 3
 
-`Graficando` Regresando al conjunto de puntos del inicio
+Volviendo a la gráfica del inicio
 
-`Hacer pequeña la gráfica y mandarla a la izquierda` 
+Escribimos las coordenadas matricialmente como desarrollamos hasta ahora
 
-`mostrar el matrices con pocos datos`
+Si resolvemos la ecuación anterior
 
-Si se resuelve la ecuación anterior `mostrar ecuación` 
+Obtenemos el vector de parámetros
 
-Se obtiene el vector de parámetros
-
-Graficando la recta obtenida por estos parámetros podemos observar el ajuste obtenido.
+Graficando la recta con intercepto 17.17 y pendiente 0.58 se grafica el ajuste obtenido.
 
 ### Interpretación de la regresión
 
-> Esperanza condicional
+Podemos preguntarnos entonces, si la regresión es útil para predecir valores desconocidos, por qué esta predicción se ve distinta, a los valores reales de los puntos que ya conocemos
 
-`Llevar la gráfica al centro nuevamente de la anterior sección`
+En la realidad no todas las personas del grupo con un sueldo $x_i$, van a gastar lo mismo, es por esto que si tuvieramos la información completa de toda una población, tendríamos una gráfica de este estilo.
 
-Podemos preguntarnos entonces, si la regresión es útil para predecir puntos fuera de nuestro conjunto de datos, por qué esta predicción se ve distante a los valores reales de los puntos conocidos
+Con distintos consumos correspondiendo al mismo ingreso.
 
-> Usar dataset P 35 tabla 2.1
+Si se calcula el promedio para cada $x_i$, tenemos una media de gasto de los consumos por grupo, denotada por los puntos naranjas.
 
-Simplificando nuestro ejemplo con fines inlustrativos, en la realidad el grupo de personas con un sueldo $x_i$ no van a gastar todos lo mismo, es por esto que si tuvieramos la información completa de toda una población, tendríamos la siguiente grafica: `grafica con varios puntos por x_i` con distintos consumos correspondiendo al mismo ingreso.
+A este promedio por grupos se le llama la esperanza de $y_i$ dado $x_i$.
 
-Si se calcula el promedio de cada grupo, se tiene una media de gasto para cada consumo denotada por los puntos naranjas, `Puntos naranjas` a este promedio por grupos se le llama la esperanza de $y_i$ dado $x_i$, `Escribir E(y_i|x_i)`, Se puede trazar una línea que pase por cada promedio `Dibujar la línea`, a esa línea se le llama la regresión lineal poblacional.
+Podemos trazar una línea que pase por cada promedio, esta es la llamada regresión lineal poblacional
 
-Sin embargo en problemas reales generalmente se tiene sólo un punto correspondiendo a cada $x_i$, como en el ejemplo visto hasta ahora. 
+Sin embargo, en problemas reales, generalmente se tiene sólo un punto correspondiendo a cada $x_i$, como en el ejemplo visto hasta ahora. 
 
-Al ajustar la regresión lineal estamos tratando de estimar esta esperanza condicional para cada valor de $x$, en base a un fragmento o muestra de la población `Graficar la regresión poblacional vs la regresión con la muestra`, e inevitablemente la estimación no será perfecta por la pérdida de información al trabajar con un subconjunto de puntos.
+Al ajustar la regresión lineal estamos tratando de estimar esta esperanza condicional para cada valor de $x$, en base a un fragmento o muestra de la población.
 
-Es por esto que se hace la distinción de los parámetros y la variable dependiente estimados con un sombrero `reescribir la ecuación`.
+Inevitablemente, la estimación no será perfecta, debido a la pérdida de información al trabajar con un subconjunto de puntos.
 
-Por todo esto, el interés está en predecir un valor lo más cercano posible al **promedio real** de la variable dependiente, *en nuestro ejemplo el gasto semanal* dado un valor de la variable dependiente llamada regresor, en base a una muestra.
+Entonces, se puede decir que el interés está en predecir un valor lo más cercano posible al **promedio real** de la variable dependiente, *en nuestro ejemplo el gasto semanal*.
 
 > Parámetros
 
-Sumado a esto, notemos que $\hat{\beta}_2$ es la pendiente, `agregar la pendiente como en Rectas1` y nos dice cuánto cambia en el gasto semanal al incrementar el ingreso en 1.
+Por otra parte, $\hat{\beta}_2$ es la pendiente, y nos dice cuánto cambia en el gasto semanal al incrementar el ingreso en 1.
 
-Como cada predicción es una estimación del valor esperado de y dado x, cuando $x=0$, $y=\hat{\beta}_1$ `Desarrollarlo`, por esta razón el intercepto sólo tendrá sentido interpretarlo si en algún momento se puede tener que $x$ vale cero, lo cual en nuesto ejemplo no sirve ya que nadie puede gastar si no recibe dinero
+Como cada predicción es una estimación del valor esperado de y dado x. Cuando $x=0$, $y=\hat{\beta}_1$.
+
+Por esta razón el intercepto sólo tendrá sentido interpretarlo si en algún momento se puede tener que $x$ vale cero, lo cual en nuesto ejemplo no sirve ya que nadie puede gastar si no recibe dinero
 
 > Notar que correlación no implica causalidad, además que en el análisis de correlación no se hace distinción de las variables, ambas se asumen como aleatorias, mientras que en regresión se asume que sólo la dependiente es aleatoria y las explicativas son fijas, no estocásticas.  
 
+**HASTA AQUÍ: 8:44**
+
 ### Regresión Lineal Múltiple
 
-Volviendo al modelo, consideremos ahora una variable explicativa más. La cantidad de años de estudio, de manera general, mientras más especializada la persona, mejor sueldo podría tener.
+A pesar de todo este desarrollo, en la vida real, existen valores que deseamos estimar y dependen de muchas variables, ¿cómo se ajusta una regresión lineal en estos casos?
 
-Reescribiendo como *$y_i = \beta_1 + \beta_2x_{i2} + \beta_3x_{i3}$* (se considerará $x_{i1}=1$ constante) ahora contiene una nueva variable $x_3$ con su respectivo parámetro $\hat{\beta}_3$, entonces la esperanza condicional *$E(y_i|x_{i2},x_{i3})$* de $y_i$ depende ahora de los valores de $x_{i2}$ y $x_{i3}$, es decir, si antes se consideraba un grupo a todos los valores de $y_i$ en la línea vertical correspondiente a $x_i$ `Graficar la línea vertical en ejemplo ilustrativo`, ahora el grupo está dado por todos los valores $y_i$ en los planos verticales que forman 90 grados y se cruzan en el punto dado por el valor de ambas variables. `Mientras se explica pasar al 3d, ya se tiene un plano, mostrar el segundo plano`
+Volviendo al modelo, consideremos ahora un atributo más de la persona. La cantidad de años de estudio, de manera general, mientras más especializada la persona, mejor sueldo podría tener.
 
-Al tener dos variables independientes y una dependiente, la gráfica ahora se debe realizar en 3 dimensiones.
+Se reescribe la ecuación mantiendo el número de observación $i$, pero se le llama $x_2$ a la primer característica y $x_3$ a la segunda, sobreentendiendo que $x_1=1$ , esta nueva variable $x_3$ agrega un parámetro $\beta_3$ al modelo.
 
-Repitiendo el proceso de graficar la población `Borrar los planos y poner los puntos poblacionales` observamos que ahora tenemos variación también en la nueva dimensión.
+La esperanza condicional de $y_i$ depende ahora de los valores de $x_{i2}$ y $x_{i3}$.
 
-Graficando las esperanzas condicionales para cada grupo, se puede trazar un plano que pase por todos los puntos medios, esta es la línea entre comillas de regresión, ya que en realidad es la extensión a 2D de la recta, un plano
+Es decir, si antes se consideraba un grupo a todos los valores de $y_i$ en la línea vertical correspondiente a $x_i$, ahora, el grupo está dado por todos los valores $y_i$, sobre los planos perpendiculares que se cruzan en el punto dado por el valor de ambas variables.
 
-De manera similar al caso con una variable, se puede re escribir como matrices, `mostrar desarrollo`, así, el desarrollo para encontrar el vector de betas es idéntico y la ecuación normal `Mostrar eq` sirve para una cantidad de variables arbitraria, consideranda cada una, una colúmna de la matriz X
+Graficando la población, observamos que ahora tenemos variación también en la nueva dimensión.
 
-Si se considera la muestra del conjunto de puntos, se tiene el plano ajustado:
+Y si marcamos las esperanzas condicionales para cada grupo como un punto naranja, se puede trazar un plano que pase por todos las medias, esta es la, entre comillas, línea de regresión poblacional, ya que en realidad es la extensión a 2D de la recta, un plano
+
+De manera similar al caso con una variable, se puede re escribir la estimación de forma matricial, así, el desarrollo para encontrar el vector de betas es idéntico, y la ecuación normal, sirve para una cantidad de variables arbitraria, si se considera cada una, como colúmna de la matriz de diseño, X.
+
+Aplcando todo este desarrollo teórico, se puede calcular los parámetros estimados de muestra original, y se obtiene un plano ajustado.
+
+En conclusion, una vez se tienen los $n$ parámetros ya calculados, se obtiene el valor estimado de la esperanza condicional de $y$, al organizar una nueva observación, con valores $a_1$ hasta $a_{n-1}$, como una fila en el formato de la matriz de diseño, y multiplicarlo por el vector de parámetros.
 
 > Estandarización se deja para el método iterativo

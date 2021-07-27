@@ -1,6 +1,7 @@
 from manimlib import *
 import numpy as np
 from collections import Counter
+from time import perf_counter
 
 
 def align_to_equal(next_to_tex_obj, tex_obj, direction, pattern_next_to='=', pattern='=', buff=LARGE_BUFF):
@@ -71,23 +72,23 @@ class Interpretacion(Scene):
         x_label = axes.get_x_axis_label(r"\text{Ingreso semanal}", direction=DOWN)
         x_label.scale(0.8).next_to(axes, DOWN)
         y_label.scale(0.8).next_to(axes, LEFT).shift(RIGHT * 2).rotate(PI / 2)
-        # self.add(axes)
 
         X_sample, Y_sample, ΦX_sample = np.load('Data/X_sample.npy'), np.load('Data/Y_sample.npy'), np.load('Data/phi_x_sample.npy')
-        # β = np.linalg.inv(ΦX.T @ ΦX) @ ΦX.T @ Y_sample
         β_sample = normal_formula(ΦX_sample, Y_sample)
 
         dots_sample = VGroup(*[Dot(axes.c2p(x, y), color=TEAL) for x, y in zip(X_sample.ravel(), Y_sample.ravel())])
-        # plot_sample = VGroup(axes, x_label, y_label, dots_sample)
 
         best_fit_graph_sample = axes.get_graph(lambda x: β_sample[0, 0] + x * β_sample[1, 0], color=RED_C)
 
         plot_sample_fit = Group(axes, x_label, y_label, dots_sample, best_fit_graph_sample)
         self.add(plot_sample_fit)
-        self.wait()
+        self.wait(7)
+        self.wait(5.3)
 
         # En la realidad el grupo de personas...
         self.play(FadeOut(best_fit_graph_sample))
+        self.wait(5)
+        self.wait(4.3)
 
         # tendríamos la siguiente gráfica
         X_population, Y_population = np.load('Data/X_population.npy'), np.load('Data/Y_population.npy')
@@ -95,20 +96,22 @@ class Interpretacion(Scene):
         for dot in dots_population:
             dot.scale(0.6)
 
-        # dots_sample_bak = dots_sample.deepcopy()
         self.play(TransformFromCopy(dots_sample, dots_population), FadeOut(dots_sample))
+        self.wait(3.5)
 
         # si se calcula el promedio de cada grupo
         X_mean, Y_mean = np.load('Data/X_mean.npy'), np.load('Data/Y_mean.npy')
         ΦX_mean = np.hstack((np.ones((len(X_mean), 1)), X_mean))
         dots_mean = VGroup(*[Dot(axes.c2p(x, y), color=ORANGE) for x, y in zip(X_mean.ravel(), Y_mean.ravel())])
         self.play(FadeIn(dots_mean))
+        self.wait(8.8)
 
         # A este promedio por grupos se le llama...
         cond_exp = Tex(r'E(y_i|x_i)', color=ORANGE)
         # cond_exp.scale(0.9).to_corner(UR)
         cond_exp.scale(0.9).move_to(axes.c2p(40, 160))
         self.play(Write(cond_exp))
+        self.wait(2)
 
         legends = create_legends()
         legends.move_to(RIGHT*5.3+UP)
@@ -119,15 +122,114 @@ class Interpretacion(Scene):
         β_population = normal_formula(ΦX_mean, Y_mean)
         best_fit_graph_population = axes.get_graph(lambda x: β_population[0, 0] + x*β_population[1, 0], color=YELLOW_C)
         self.play(ShowCreation(best_fit_graph_population), FadeIn(legends[0]), FadeIn(legends[1]))
-        self.wait()
+        self.wait(7)
+        self.wait(6)
 
         # en base a un fragmento o muestra de la población
         self.play(ShowCreation(best_fit_graph_sample),
                   FadeIn(legends[2]), FadeIn(legends[3]))
-        self.wait(3)
-
+        self.wait(8)
+        self.wait(8.8)
         self.play(TransformFromCopy(dots_population, dots_sample), FadeOut(dots_population), FadeOut(legends),
                   FadeOut(best_fit_graph_population), FadeOut(dots_mean), FadeOut(cond_exp))
+                  # plot_sample_fit.animate.move_to(ORIGIN))
+        self.wait(5)
+        self.wait(5.9)
+        # notemos que \hat{\beta}_2 es la pendiente
+        x_coord = 200
+        y_coord = float(np.array([[1, x_coord]])@β_sample)
+        dot_x = Dot(axes.c2p(x_coord, β_sample[0,0]))
+        dot_y = Dot(axes.c2p(x_coord, y_coord))
+
+        v_line = DashedLine(dot_x.get_top()-[0, 0.08, 0], dot_y.get_bottom(), color=BLUE_C, stroke_width=3)
+        h_line = axes.get_h_line(dot_x.get_left() + [0.08, 0, 0], color=BLUE_C, stroke_width=3)
+        text_Δx = Tex(rf'\scriptstyle \Delta x={x_coord}', color=BLUE_C)
+        text_Δx.next_to(h_line, UP)
+        text_Δy = Tex(rf'\scriptstyle \Delta y={y_coord-β_sample[0,0]:.2f}', color=BLUE_C)
+        text_Δy.next_to(v_line, RIGHT)
+        self.play(ShowCreation(v_line), ShowCreation(h_line), Write(text_Δy), Write(text_Δx))
+        self.wait(1.7)
+        beta_2 = Tex(rf'\hat{{\beta}}_2=\frac{{{y_coord-β_sample[0,0]:.2f}}}{{{x_coord}}}={β_sample[1,0]:.2f}',
+                     color=BLUE_C)
+        beta_2.scale(0.8).to_corner(UR)
+        self.play(Write(beta_2))
+        self.wait(3.5)
+        # Como cada predicción es el valor esperado de y dado x
+        pred1 = Tex(r'\hat{y}_i', '=', r'\hat{\beta}_1', '+', r'\hat{\beta}_2', 'x_i', color=YELLOW_C)
+        pred1.next_to(beta_2, DOWN, buff=MED_LARGE_BUFF)
+        self.play(Write(pred1))
+        self.wait(4.6)
+        # Cuando x = 0
+        dot_pred = Dot(axes.c2p(0, 0), color=YELLOW_C)
+        pred2 = Tex(r'\hat{y}_i', '=', r'\hat{\beta}_1', '+', r'\hat{\beta}_2', '0', color=YELLOW_C)
+        pred2.next_to(beta_2, DOWN, buff=MED_LARGE_BUFF)
+        self.play(TransformMatchingTex(pred1, pred2), ShowCreation(dot_pred))
+        self.wait(0.9)
+
+        # la estimación toma el valor de \hat{\beta}_1 (beta 1 sombrero)
+        pred3 = Tex(r'\hat{y}_i', '=', r'\hat{\beta}_1', color=YELLOW_C)
+        pred3.next_to(beta_2, DOWN, buff=MED_LARGE_BUFF)
+        self.play(TransformMatchingTex(pred2, pred3),
+                  dot_pred.animate.move_to(axes.c2p(0, β_sample[0,0])))
+        self.wait(15.2)
+        # Por esta razón el interepto sólo tendrá sentido...
+
+
+def wait_for_input(print_time=True):
+    start = perf_counter()
+    input()
+    end = perf_counter()
+    if print_time:
+        print(round(end-start, 1))
+
+
+class InterpretacionTimer(Scene):
+    def construct(self):
+        axes = create_axes((0, 300, 40), (0, 200, 40))
+        axes.to_corner(LEFT).scale(0.9)
+        y_label = axes.get_y_axis_label(r"\text{Gasto de consumo semanal}", direction=RIGHT,
+                                        buff=0.5)
+        x_label = axes.get_x_axis_label(r"\text{Ingreso semanal}", direction=DOWN)
+        x_label.scale(0.8).next_to(axes, DOWN)
+        y_label.scale(0.8).next_to(axes, LEFT).shift(RIGHT * 2).rotate(PI / 2)
+
+        X_sample, Y_sample, ΦX_sample = np.load('Data/X_sample.npy'), np.load('Data/Y_sample.npy'), np.load('Data/phi_x_sample.npy')
+        β_sample = normal_formula(ΦX_sample, Y_sample)
+
+        dots_sample = VGroup(*[Dot(axes.c2p(x, y), color=TEAL) for x, y in zip(X_sample.ravel(), Y_sample.ravel())])
+
+        best_fit_graph_sample = axes.get_graph(lambda x: β_sample[0, 0] + x * β_sample[1, 0], color=RED_C)
+
+        plot_sample_fit = Group(axes, x_label, y_label, dots_sample, best_fit_graph_sample)
+
+        # En la realidad el grupo de personas...
+
+        # tendríamos la siguiente gráfica
+        X_population, Y_population = np.load('Data/X_population.npy'), np.load('Data/Y_population.npy')
+        dots_population = VGroup(*[Dot(axes.c2p(x, y), color=TEAL) for x, y in zip(X_population.ravel(), Y_population.ravel())])
+        for dot in dots_population:
+            dot.scale(0.6)
+
+        # si se calcula el promedio de cada grupo
+        X_mean, Y_mean = np.load('Data/X_mean.npy'), np.load('Data/Y_mean.npy')
+        ΦX_mean = np.hstack((np.ones((len(X_mean), 1)), X_mean))
+        dots_mean = VGroup(*[Dot(axes.c2p(x, y), color=ORANGE) for x, y in zip(X_mean.ravel(), Y_mean.ravel())])
+
+        # A este promedio por grupos se le llama...
+        cond_exp = Tex(r'E(y_i|x_i)', color=ORANGE)
+        # cond_exp.scale(0.9).to_corner(UR)
+        cond_exp.scale(0.9).move_to(axes.c2p(40, 160))
+
+        legends = create_legends()
+        legends.move_to(RIGHT*5.3+UP)
+        legends[1].scale(0.7)
+        legends[3].scale(0.7)
+
+        # Se puede trazar una línea que pase por cada promedio
+        β_population = normal_formula(ΦX_mean, Y_mean)
+        best_fit_graph_population = axes.get_graph(lambda x: β_population[0, 0] + x*β_population[1, 0], color=YELLOW_C)
+
+        # en base a un fragmento o muestra de la población
                   # plot_sample_fit.animate.move_to(ORIGIN))
 
         # notemos que \hat{\beta}_2 es la pendiente
@@ -142,32 +244,55 @@ class Interpretacion(Scene):
         text_Δx.next_to(h_line, UP)
         text_Δy = Tex(rf'\scriptstyle \Delta y={y_coord-β_sample[0,0]:.2f}', color=BLUE_C)
         text_Δy.next_to(v_line, RIGHT)
-        self.play(ShowCreation(v_line), ShowCreation(h_line), Write(text_Δy), Write(text_Δx))
 
         beta_2 = Tex(rf'\hat{{\beta}}_2=\frac{{{y_coord-β_sample[0,0]:.2f}}}{{{x_coord}}}={β_sample[1,0]:.2f}',
                      color=BLUE_C)
         beta_2.scale(0.8).to_corner(UR)
-        self.play(Write(beta_2))
 
         # Como cada predicción es el valor esperado de y dado x
         pred1 = Tex(r'\hat{y}_i', '=', r'\hat{\beta}_1', '+', r'\hat{\beta}_2', 'x_i', color=YELLOW_C)
         pred1.next_to(beta_2, DOWN, buff=MED_LARGE_BUFF)
-        self.play(Write(pred1))
 
         # Cuando x = 0
         dot_pred = Dot(axes.c2p(0, 0), color=YELLOW_C)
         pred2 = Tex(r'\hat{y}_i', '=', r'\hat{\beta}_1', '+', r'\hat{\beta}_2', '0', color=YELLOW_C)
         pred2.next_to(beta_2, DOWN, buff=MED_LARGE_BUFF)
-        self.play(TransformMatchingTex(pred1, pred2))
-        self.play(ShowCreation(dot_pred))
 
         # la estimación toma el valor de \hat{\beta}_1 (beta 1 sombrero)
         pred3 = Tex(r'\hat{y}_i', '=', r'\hat{\beta}_1', color=YELLOW_C)
         pred3.next_to(beta_2, DOWN, buff=MED_LARGE_BUFF)
-        self.play(TransformMatchingTex(pred2, pred3))
-        self.play(dot_pred.animate.move_to(axes.c2p(0, β_sample[0,0])))
 
-        # Por esta razón el interepto sólo tendrá sentido...
+        print('Listo')
+        wait_for_input(False)
+        self.play(FadeIn(plot_sample_fit))
+        wait_for_input()
+        self.play(FadeOut(best_fit_graph_sample))
+        wait_for_input()
+        self.play(TransformFromCopy(dots_sample, dots_population), FadeOut(dots_sample))
+        wait_for_input()
+        self.play(FadeIn(dots_mean))
+        wait_for_input()
+        self.play(Write(cond_exp))
+        wait_for_input()
+        self.play(ShowCreation(best_fit_graph_population), FadeIn(legends[0]), FadeIn(legends[1]))
+        wait_for_input()
+        self.play(ShowCreation(best_fit_graph_sample),
+                  FadeIn(legends[2]), FadeIn(legends[3]))
+        wait_for_input()
+        self.play(TransformFromCopy(dots_population, dots_sample), FadeOut(dots_population), FadeOut(legends),
+                  FadeOut(best_fit_graph_population), FadeOut(dots_mean), FadeOut(cond_exp))
+        wait_for_input()
+        self.play(ShowCreation(v_line), ShowCreation(h_line), Write(text_Δy), Write(text_Δx))
+        wait_for_input()
+        self.play(Write(beta_2))
+        wait_for_input()
+        self.play(Write(pred1))
+        wait_for_input()
+        self.play(TransformMatchingTex(pred1, pred2), ShowCreation(dot_pred))
+        wait_for_input()
+        self.play(TransformMatchingTex(pred2, pred3),
+                  dot_pred.animate.move_to(axes.c2p(0, β_sample[0, 0])))
+        wait_for_input()
 
 
 def create_planes(axes3d):
@@ -213,16 +338,6 @@ def plane_split(plane_points, points, counts):
 
     return Group(*up), Group(*down)
 
-# 55 56.02683706070071 [-4.0890882 -0.5375    -1.4258588]
-# 88 76.66299254525904 [-4.0890882 -0.5375    -1.4258588]
-# 90 86.25681576144663 [-4.0890882 -0.5375    -1.4258588]
-# 80 100.26757188498252 [-4.0890882 -0.5375    -1.4258588]
-# 118 114.27832800851839 [-4.0890882 -0.5375    -1.4258588]
-# 120 123.87215122470596 [-4.0890882 -0.5375    -1.4258588]
-# 145 133.46597444089355 [-3.41178651  0.1225     -0.92349088]
-# 135 143.0597976570811 [-3.41178651  0.1225     -0.92349088]
-# 145 152.65362087326872 [-3.41178651  0.1225     -0.92349088]
-# 175 164.45591054313044 [-3.41178651  0.1225     -0.92349088]
 
 def plane_split_sample(plane_y, points_y, dots):
     up = []
@@ -242,27 +357,49 @@ def get_y(p):
 
 class Multiple(ThreeDScene):
     def construct(self):
+        delay = 0.5
+        vector_line1 = Tex(r'\begin{bmatrix}\hat{y}_1\\\hat{y}_2\\\vdots\\\hat{y}_m\end{bmatrix}', r'=',
+                           r'\begin{bmatrix}1,\hspace{2pt}x_{1,2},\hspace{2pt}x_{1,3}\\' +
+                           r'1,\hspace{2pt}x_{2,2},\hspace{2pt}x_{2,3}\\' +
+                           r'\vdots\\' +
+                           r'1,\hspace{2pt}x_{m,2},\hspace{2pt}x_{m,3}\end{bmatrix}' +
+                           r'\begin{bmatrix}\hat{\beta}_1\\\hat{\beta}_2\\\hat{\beta}_3\end{bmatrix}')
+        # print('Listo')
+        # wait_for_input(False)
+        # wait_for_input()
+        self.wait(11+delay)
         # Volviendo al modelo
         model1 = Tex(r'y_i', '=', r'\beta_1', '+', r'\beta_2', 'x_i')
         self.play(Write(model1))
+        # wait_for_input()
+        self.wait(2+delay)
 
         # Consideremos ahora una variable explicativa más
         model2 = Tex(r'y_i', '=', r'\beta_1', '+', r'\beta_2', 'x_i', '+', r'\beta_3', 'z_i')
         self.play(TransformMatchingTex(model1, model2))
+        # wait_for_input()
+        self.wait(7.8+delay)
 
         # Reescribiendo como
         model3 = Tex(r'y_i', '=', r'\beta_1', '+', r'\beta_2', 'x_{i2}', '+', r'\beta_3', 'x_{i3}')
         self.play(TransformMatchingTex(model2, model3))
+        # wait_for_input()
+        self.wait(10.3+delay)
 
         # Ahora contiene una nueva variable
         self.play(model3.animate.set_color_by_tex_to_color_map({'x_{i3}': YELLOW_C}))
+        # wait_for_input()
+        self.wait(1.3+delay)
         self.play(model3.animate.set_color_by_tex_to_color_map({r'\beta_3': BLUE_C}))
+        # wait_for_input()
+        self.wait(1.7+delay)
 
         # Entonces la esperanza condicional
         model4 = Tex(r'E(y_i|x_{i2},x_{i3})', '=', r'\beta_1', '+', r'\beta_2', 'x_{i2}', '+', r'\beta_3', 'x_{i3}')
         model4.fix_in_frame()
         self.play(TransformMatchingTex(model3, model4))
-        self.play(model4.animate.to_corner(UR))
+        # wait_for_input()
+        self.wait(4.2+delay)
 
         # Si antes todos los valores de y_i...
         axes3d = ThreeDAxes(x_range=[0, 300, 40], y_range=[0, 200, 40], z_range=[0, 30, 5],
@@ -274,7 +411,6 @@ class Multiple(ThreeDScene):
         axes3d.rotate(angle_axes, np.array([0, 1, 0]))
 
         frame = self.camera.frame
-        # phi_frame = 7 * DEGREES
         phi_frame = 6 * DEGREES
         frame.set_euler_angles(phi=phi_frame)
 
@@ -287,8 +423,10 @@ class Multiple(ThreeDScene):
         z_label.scale(0.6)
 
         plot = Group(axes3d, x_label, y_label, z_label)
-        self.play(FadeOut(model4), FadeIn(axes3d), FadeIn(x_label), FadeIn(y_label))
-        # self.wait()
+        self.play(model4.animate.to_corner(UR),
+                  FadeIn(axes3d), FadeIn(x_label), FadeIn(y_label))
+        # wait_for_input()
+        self.wait(1.6+delay)
 
         line = Line(axes3d.c2p(100, 0, 0), axes3d.c2p(100, 170, 0), color=GOLD_C)
         x_i = Tex('x_i', color=GOLD_C)
@@ -297,18 +435,18 @@ class Multiple(ThreeDScene):
         dots_line = VGroup(*([Dot(axes3d.c2p(100, y, 0), color=TEAL_C) for y in [55, 60, 65, 70, 75]]))
         for dot in dots_line:
             dot.scale(0.6)
-        self.play(FadeIn(line), FadeIn(dots_line), FadeIn(x_i))
-        # self.wait()
+        self.play(FadeOut(model4), FadeIn(line), FadeIn(dots_line), FadeIn(x_i))
+        # wait_for_input()
+        self.wait(3.6+delay)
 
         # ahora el grupo está dado por todos los valores y_i en los planos...
-        self.play(FadeOut(dots_line), FadeOut(line), FadeOut(x_i),)
-        self.play(FadeIn(z_label),
+        # self.play(FadeOut(dots_line), FadeOut(line), FadeOut(x_i),)
+        self.play(FadeOut(dots_line), FadeOut(line), FadeOut(x_i),
+                  FadeIn(z_label),
                   frame.animate.set_euler_angles(phi=-20*DEGREES),
-                  plot.animate.rotate(-angle_axes-20*DEGREES, np.array([0, 1, 0])),)
-
-        # self.wait()
-        planes = create_planes(axes3d)
-        self.play(FadeIn(planes))
+                  plot.animate.rotate(-angle_axes-20*DEGREES, np.array([0, 1, 0])), run_time=1.5)
+        # wait_for_input()
+        self.wait(1.2+delay)
 
         X_population, Y_population = np.load('Data/X_mult_population.npy'), np.load('Data/Y_population.npy')
         X_mean, Y_mean = np.load('Data/X_mult_mean.npy'), np.load('Data/Y_mean.npy')
@@ -319,20 +457,36 @@ class Multiple(ThreeDScene):
                                    for x, y in zip(X_population, Y_population.ravel())])
         for dot in dots_population:
             dot.scale(0.6)
+        dots_population_slice = dots_population[:5].deepcopy()
         self.play(FadeIn(dots_population[:5]))
+        # wait_for_input()
+        self.wait(1+delay)
+
+        planes = create_planes(axes3d)
+        self.play(FadeIn(planes), FadeIn(dots_population_slice))
+        # wait_for_input()
+        self.wait(5+delay)
+
         graph_population = Group(plot, dots_population)
 
         # Al tener dos variables independientes y una dependiente, la gráfica ahora se debe realizar en 3 dimensiones.
 
         # Repitiendo el proceso de graficar la población
-        self.play(FadeOut(planes), FadeIn(dots_population[5:]))
+        self.play(FadeOut(planes),
+                  FadeOut(dots_population_slice),
+                  FadeIn(dots_population[5:]))
+        # wait_for_input()
+        self.wait(6.6+delay)
 
         # Graficando las esperanzas condicionales para cada grupo
         dots_mean = VGroup(*[Dot(axes3d.c2p(x[0], y, x[1]), color=ORANGE) for x, y in zip(X_mean, Y_mean.ravel())])
         graph_mean = Group(plot, dots_population, dots_mean)
         self.play(FadeIn(dots_mean))
-        # self.play(Rotate(graph_mean, PI/4, np.array([0, 1, 0])))
+        # wait_for_input()
+        self.wait(3+delay)
         self.play(Rotate(graph_mean, 55*DEGREES, np.array([0, 1, 0])))
+        # wait_for_input()
+        # self.wait(0)
 
         # Particionando el plano
         counts = Counter(X_population[:,0].ravel())
@@ -355,34 +509,44 @@ class Multiple(ThreeDScene):
         self.play(ShowCreation(mesh_population), ShowCreation(population_fit),
                   FadeIn(dots_population_up_copy),
                   FadeIn(dots_mean_copy))
-        # self.wait(3)
+        # wait_for_input()
+        self.wait(9+delay)
 
         full_plot = Group(plot, dots_population, dots_mean, mesh_population, population_fit,
                           dots_population_up_copy, dots_mean_copy)
-        # self.play(full_plot.animate.to_corner(LEFT).rotate(10*DEGREES, np.array([0, 1, 0])))
         self.play(full_plot.animate.to_corner(LEFT))
+        # wait_for_input()
+        self.wait(0.7+delay)
 
         # De manera similar al caso con una variable
         line_eq1 = Tex(r'\hat{y}_i', r'=', r'\hat{\beta}_1 + \hat{\beta}_2x_{i2} + \hat{\beta}_3x_{i3}')
         line_eq1.move_to(RIGHT*3.5).fix_in_frame()
         self.play(Write(line_eq1))
+        # wait_for_input()
+        self.wait(1.2+delay)
 
-        vector_line1 = Tex(r'\begin{bmatrix}\hat{y}_1\\\hat{y}_2\\\vdots\\\hat{y}_m\end{bmatrix}', r'=',
-                           r'\begin{bmatrix}1,\hspace{2pt}x_{1,2},\hspace{2pt}x_{1,3}\\'+
-                           r'1,\hspace{2pt}x_{2,2},\hspace{2pt}x_{2,3}\\'+
-                           r'\vdots\\'+
-                           r'1,\hspace{2pt}x_{m,2},\hspace{2pt}x_{m,3}\end{bmatrix}'+
-                           r'\begin{bmatrix}\hat{\beta}_1\\\hat{\beta}_2\\\hat{\beta}_3\end{bmatrix}')
-        vector_line1.move_to(line_eq1).fix_in_frame()
+        # vector_line1 = Tex(r'\begin{bmatrix}\hat{y}_1\\\hat{y}_2\\\vdots\\\hat{y}_m\end{bmatrix}', r'=',
+        #                    r'\begin{bmatrix}1,\hspace{2pt}x_{1,2},\hspace{2pt}x_{1,3}\\'+
+        #                    r'1,\hspace{2pt}x_{2,2},\hspace{2pt}x_{2,3}\\'+
+        #                    r'\vdots\\'+
+        #                    r'1,\hspace{2pt}x_{m,2},\hspace{2pt}x_{m,3}\end{bmatrix}'+
+        #                    r'\begin{bmatrix}\hat{\beta}_1\\\hat{\beta}_2\\\hat{\beta}_3\end{bmatrix}')
+        vector_line1.next_to(line_eq1, UP).scale(0.9).fix_in_frame()
         self.play(TransformMatchingTex(line_eq1, vector_line1))
+        # wait_for_input()
+        self.wait(1.9+delay)
 
         vector_line2 = Tex(r'\mathbf{\hat{y}} = X\hat{\beta}')
-        vector_line2.move_to(vector_line1).fix_in_frame()
-        self.play(TransformMatchingTex(vector_line1, vector_line2))
+        vector_line2.next_to(vector_line1, DOWN, buff=MED_LARGE_BUFF).fix_in_frame()
+        self.play(Write(vector_line2))
+        # wait_for_input()
+        self.wait(1.3+delay)
 
         normal_eq = Tex(r'\hat{\beta}', '=', r'(', r'\mathbf{X}^T\mathbf{X}', ')^{-1}', r'\mathbf{X}^T\mathbf{y}')
-        normal_eq.next_to(vector_line2, DOWN, buff=MED_LARGE_BUFF).fix_in_frame()
-        self.play(Write(normal_eq))
+        normal_eq.next_to(vector_line2, DOWN, buff=MED_LARGE_BUFF).shift(UP).fix_in_frame()
+        self.play(FadeOut(vector_line1), vector_line2.animate.shift(UP), Write(normal_eq))
+        # wait_for_input()
+        self.wait(9.6+delay)
 
         # Si se considera la muestra del conjunto de puntos, se tiene el plano ajustado:
         X_sample, Y_sample, ΦX_sample = np.load('Data/X_mult_sample.npy'), np.load('Data/Y_sample.npy'), np.load(
@@ -393,10 +557,13 @@ class Multiple(ThreeDScene):
         self.play(FadeOut(dots_population_up_copy),
                   FadeOut(dots_mean), FadeOut(mesh_population), FadeOut(population_fit), FadeOut(dots_mean_copy),
                   Transform(dots_population, dots_sample))
+        # wait_for_input()
+        self.wait(0.8+delay)
 
         plot_sample = Group(plot, dots_sample)
         self.remove(dots_population)
         self.play(plot_sample.animate.rotate(50 * DEGREES, np.array([0, 1, 0])))
+        self.wait(3+delay)
 
         sample_fit = ParametricSurface(
             lambda u, v: np.array([
@@ -413,3 +580,19 @@ class Multiple(ThreeDScene):
         dots_sample_up_copy = dots_sample_up.deepcopy()
 
         self.play(ShowCreation(mesh_sample), ShowCreation(sample_fit), FadeIn(dots_sample_up_copy))
+        # wait_for_input()
+        self.wait(5.2+delay)
+
+        final_eq = Tex(r'\hat{y} = ',
+                       r'\begin{bmatrix}1,\hspace{2pt}a_1,\hspace{2pt}\dots\hspace{2pt},a_{n-1}\end{bmatrix}',
+                       r'\begin{bmatrix}\hat{\beta}_1\\\vdots\\\hat{\beta}_n\end{bmatrix}')
+        final_eq.next_to(normal_eq, DOWN).fix_in_frame()
+        self.play(Write(final_eq[0]))
+        # wait_for_input()
+        self.wait(4.3+delay)
+        self.play(Write(final_eq[1]))
+        # wait_for_input()
+        self.wait(5.4+delay)
+        self.play(Write(final_eq[2]))
+        # wait_for_input()
+        self.wait(2+delay)
